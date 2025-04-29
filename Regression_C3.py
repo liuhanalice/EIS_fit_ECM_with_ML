@@ -18,10 +18,8 @@ from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.utils import plot_model
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
-
-#### Load Data
 # Load EIS data-set
-filename="EISmat/xy_data_131k_regC1_v2.mat"
+filename="EISmat/xy_data_131k_regC3_v2.mat"
 
 x=scipy.io.loadmat(filename)["x_data"]
 y=scipy.io.loadmat(filename)["y_data"]
@@ -37,6 +35,8 @@ new_x = np.zeros(new_shape)
 new_x[:, :, :3] = x
 
 y[:,3]=y[:,3]*10**6
+
+
 y = np.delete(y, [2], axis=1)
 
 # Data Augmentation
@@ -50,9 +50,9 @@ x_train, x_test, y_train, y_test = train_test_split(new_x, y,
                                                     test_size=0.2, 
                                                     random_state=42)
 
-
+##### Model #####
 # Setup the Experiment 
-Experiment_name="RegC1"
+Experiment_name="RegC3"
 fn_tmp=filename.split("xy_data_",1)[1].split(".",1)[0]
 Experiment_path="EIS_"+fn_tmp+"_model_"+Experiment_name
 
@@ -91,11 +91,6 @@ def make_model(input_shape):
 
 #------------------------------------------------------------------------------
     connector = conv1d
-    # connector = keras.layers.Flatten()(conv1d)
-    # connector = keras.layers.SpatialDropout1D(0.5)(conv1d)
-    # connector = keras.layers.BatchNormalization()(connector)
-    # connector = keras.layers.GlobalAveragePooling1D()(connector)
-    # connector = keras.layers.Flatten()(connector)
 #------------------------------------------------------------------------------        
     dense1 = keras.layers.Dense(512, 
                                activation="linear", 
@@ -120,7 +115,7 @@ def make_model(input_shape):
                                )(dense1)
                                     
 #------------------------------------------------------------------------------
-    output_layer1 = keras.layers.Dense(3)(dense1)
+    output_layer1 = keras.layers.Dense(4)(dense1)
 
 
     return keras.models.Model(inputs=input_layer, outputs=output_layer1)
@@ -129,10 +124,9 @@ model = make_model(input_shape=x_train.shape[1:])
 
 #Model Summarize
 print(model.summary())
-keras.utils.plot_model(model, show_shapes=True)
+# keras.utils.plot_model(model, show_shapes=True)
 
 ##### Training #####
-
 epochs = 500
 batch_size = 256
 Experiment_path=Experiment_path+"_"+str(batch_size) 
@@ -186,18 +180,17 @@ history = model.fit(
           verbose=2,
                    )
 
-model.save('RegC1_alpha_BN.h5')
-
+model.save('RegC3_alpha_BN.h5')
 
 ##### Evaluation #####
 # Load EIS data-set
-# The partitioning ratio of 80:20 makes the final input data consist of 5243 spectra.
-filename="EISmat/xy_data_26k_regC1_v2_test.mat"
+filename="EISmat/xy_data_26k_regC3_v2_test.mat"
 
 x=scipy.io.loadmat(filename)["x_data"]
 y=scipy.io.loadmat(filename)["y_data"]
 y=np.squeeze(y)
 x=np.swapaxes(x, 1, 2)
+
 
 new_shape=x.shape
 new_shape=np. asarray(new_shape)
@@ -208,11 +201,14 @@ new_x[:, :, :3] = x
 
 y[:,3]=y[:,3]*10**6
 
+
 y = np.delete(y, [2], axis=1)
+
 
 new_x[:,:,3]=x[:,:,0]*-1
 new_x[:,:,4]=x[:,:,1]*-1
 new_x[:,:,5]=x[:,:,2]*-1
+
 
 #split data
 x_train, x_test, y_train, y_test = train_test_split(new_x, y, 
@@ -220,7 +216,7 @@ x_train, x_test, y_train, y_test = train_test_split(new_x, y,
                                                     random_state=42)
 
 #Load Model
-model_to_load="RegC1_alpha_BN.h5"
+model_to_load="RegC3_alpha_BN.h5"
 predict_model = tf.keras.models.load_model(model_to_load)
 
 from sklearn.metrics import r2_score
@@ -230,10 +226,30 @@ from sklearn.metrics import mean_squared_error
 y_pred=predict_model.predict(x_test)
 y_pred=np.asarray(y_pred)
 
-plt.rcParams["font.weight"] = "bold"
-plt.rcParams["axes.labelweight"] = "bold"
+
 a=y_test[0:99,0]
 b=y_pred[0:99,0]
+
+
+plt.rcParams["font.weight"] = "bold"
+plt.rcParams["axes.labelweight"] = "bold"
+
+
+plt.figure(figsize=(4, 2.8), dpi=300)
+plt.title("Rs")
+plt.plot(a,"*",ms=3,markeredgecolor='red')
+plt.plot(b,'o', markerfacecolor='none',ms=6, markeredgecolor='black')
+# plt.ylim(0,300)
+# plt.xlim(0,300)
+# plt.show()
+plt.savefig(Experiment_path+"/"+"Rs.png")
+print("R2 score of Rs:", r2_score(a,b))
+print("MAE of Rs:", mean_absolute_error(a,b))
+print("MAPE of Rs:", str(mean_absolute_percentage_error(a,b)*100)+" %")
+print("MSE of Rs:", mean_squared_error(a,b))
+
+a=y_test[0:99,1]
+b=y_pred[0:99,1]
 plt.figure(figsize=(4, 2.8), dpi=300)
 plt.title("R1")
 plt.plot(a,"*",ms=3,markeredgecolor='red')
@@ -247,24 +263,9 @@ print("MAE of R1:", mean_absolute_error(a,b))
 print("MAPE of R1:", str(mean_absolute_percentage_error(a,b)*100)+" %")
 print("MSE of R1:", mean_squared_error(a,b))
 
-a=y_test[0:99,1]
-b=y_pred[0:99,1]
-plt.figure(figsize=(4, 2.8), dpi=300)
-plt.title("R2")
-plt.plot(a,"*",ms=3,markeredgecolor='red')
-plt.plot(b,'o', markerfacecolor='none',ms=6, markeredgecolor='black')
-# plt.ylim(0,300)
-# plt.xlim(0,300)
-# plt.show()
-plt.savefig(Experiment_path+"/"+"R2.png")
-print("R2 score of R2:", r2_score(a,b))
-print("MAE of R2:", mean_absolute_error(a,b))
-print("MAPE of R2:", str(mean_absolute_percentage_error(a,b)*100)+" %")
-print("MSE of R2:", mean_squared_error(a,b))
-
 a=y_test[0:99,2]
 b=y_pred[0:99,2]
-plt.figure(figsize=(4, 2.8), dpi=300)
+plt.figure(figsize=(4, 3), dpi=300)
 plt.title("Q1")
 plt.plot(a,"*",ms=3,markeredgecolor='red')
 plt.plot(b,'o', markerfacecolor='none',ms=6, markeredgecolor='black')
@@ -277,3 +278,17 @@ print("MAE of Q1:", mean_absolute_error(a,b))
 print("MAPE of Q1:", str(mean_absolute_percentage_error(a,b)*100)+" %")
 print("MSE of Q1:", mean_squared_error(a,b))
 
+a=y_test[0:99,3]
+b=y_pred[0:99,3]
+plt.figure(figsize=(4, 2.8), dpi=300)
+plt.title("Sigma")
+plt.plot(a,"*",ms=3,markeredgecolor='red')
+plt.plot(b,'o', markerfacecolor='none',ms=6, markeredgecolor='black')
+# plt.ylim(0,300)
+# plt.xlim(0,300)
+# plt.show()
+plt.savefig(Experiment_path+"/"+"Sigma.png")
+print("R2 score of sigma:", r2_score(a,b))
+print("MAE of sigma:", mean_absolute_error(a,b))
+print("MAPE of sigma:", str(mean_absolute_percentage_error(a,b)*100)+" %")
+print("MSE of sigma:", mean_squared_error(a,b))

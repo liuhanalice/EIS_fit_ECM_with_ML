@@ -1,1 +1,5 @@
 *.mat
+EISmat
+*.h5
+logs
+*.log
