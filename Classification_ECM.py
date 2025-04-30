@@ -18,9 +18,11 @@ from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.utils import plot_model
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+
 ##### Load EIS data-set #####
 
-filename="xy_data_33k_5circuit_v2.mat"
+filename="EISmat/xy_data_33k_5circuit_v2.mat"
 
 x=scipy.io.loadmat(filename)["x_data"]
 y=scipy.io.loadmat(filename)["y_data"]
@@ -106,7 +108,7 @@ print(model.summary())
 
 ##### Training #####
 epochs = 400
-batch_size = 1024
+batch_size = 256
 Experiment_path=Experiment_path+"_"+str(batch_size) 
 print(Experiment_path)
 
