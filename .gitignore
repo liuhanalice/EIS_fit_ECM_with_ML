@@ -1,4 +1,5 @@
 *.mat
+*.h5
 EISmat
 logs
 *.log
