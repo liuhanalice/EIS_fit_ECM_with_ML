@@ -115,7 +115,9 @@ def make_model(input_shape):
                                )(dense1)
                                     
 #------------------------------------------------------------------------------
-    output_layer1 = keras.layers.Dense(4)(dense1)
+    # output_layer1 = keras.layers.Dense(4)(dense1)
+    # add non-negative constraint
+    output_layer1 = keras.layers.Dense(4, activation='softplus')(dense1)
 
 
     return keras.models.Model(inputs=input_layer, outputs=output_layer1)
@@ -127,8 +129,8 @@ print(model.summary())
 # keras.utils.plot_model(model, show_shapes=True)
 
 ##### Training #####
-epochs = 200
-batch_size = 256
+epochs = 500
+batch_size = 1024
 Experiment_path=Experiment_path+"_"+str(batch_size) 
 print(Experiment_path)
 

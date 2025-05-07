@@ -23,32 +23,32 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 # Load EIS data-set
 filename="EISmat/xy_data_131k_regC1_v2.mat"
 
-# x=scipy.io.loadmat(filename)["x_data"]
-# y=scipy.io.loadmat(filename)["y_data"]
-# y=np.squeeze(y)
-# x=np.swapaxes(x, 1, 2)
+x=scipy.io.loadmat(filename)["x_data"]
+y=scipy.io.loadmat(filename)["y_data"]
+y=np.squeeze(y)
+x=np.swapaxes(x, 1, 2)
 
 
-# new_shape=x.shape
-# new_shape=np. asarray(new_shape)
-# new_shape[-1]=new_shape[-1]+3
-# new_shape=tuple(new_shape)
-# new_x = np.zeros(new_shape)
-# new_x[:, :, :3] = x
+new_shape=x.shape
+new_shape=np. asarray(new_shape)
+new_shape[-1]=new_shape[-1]+3
+new_shape=tuple(new_shape)
+new_x = np.zeros(new_shape)
+new_x[:, :, :3] = x
 
-# y[:,3]=y[:,3]*10**6
-# y = np.delete(y, [2], axis=1)
+y[:,3]=y[:,3]*10**6
+y = np.delete(y, [2], axis=1)
 
-# # Data Augmentation
-# new_x[:,:,3]=x[:,:,0]*-1
-# new_x[:,:,4]=x[:,:,1]*-1
-# new_x[:,:,5]=x[:,:,2]*-1
+# Data Augmentation
+new_x[:,:,3]=x[:,:,0]*-1
+new_x[:,:,4]=x[:,:,1]*-1
+new_x[:,:,5]=x[:,:,2]*-1
 
 
-# #split data
-# x_train, x_test, y_train, y_test = train_test_split(new_x, y, 
-#                                                     test_size=0.2, 
-#                                                     random_state=42)
+#split data
+x_train, x_test, y_train, y_test = train_test_split(new_x, y, 
+                                                    test_size=0.2, 
+                                                    random_state=42)
 
 
 # Setup the Experiment 
@@ -58,135 +58,137 @@ Experiment_path="EIS_"+fn_tmp+"_model_"+Experiment_name
 
 
 # #build model
-# initializer = tf.keras.initializers.HeNormal()
+initializer = tf.keras.initializers.HeNormal()
 
 
-# def make_model(input_shape):
-#     input_layer = keras.layers.Input(input_shape)
-# #------------------------------------------------------------------------------
-#     conv1d = keras.layers.Conv1D(filters=64, kernel_size=32, 
-#                                   padding="same", activation="relu" ,
-#                                   kernel_initializer=initializer
-#                                  )(input_layer)
+def make_model(input_shape):
+    input_layer = keras.layers.Input(input_shape)
+#------------------------------------------------------------------------------
+    conv1d = keras.layers.Conv1D(filters=64, kernel_size=32, 
+                                  padding="same", activation="relu" ,
+                                  kernel_initializer=initializer
+                                 )(input_layer)
 
-#     conv1d = keras.layers.Conv1D(filters=128, kernel_size=16, 
-#                                   padding="same", activation="relu" ,
-#                                   kernel_initializer=initializer
-#                                  )(conv1d)
+    conv1d = keras.layers.Conv1D(filters=128, kernel_size=16, 
+                                  padding="same", activation="relu" ,
+                                  kernel_initializer=initializer
+                                 )(conv1d)
     
-#     conv1d = keras.layers.Conv1D(filters=256, kernel_size=8, 
-#                                   padding="same", activation="relu" ,
-#                                   kernel_initializer=initializer
-#                                  )(conv1d)
+    conv1d = keras.layers.Conv1D(filters=256, kernel_size=8, 
+                                  padding="same", activation="relu" ,
+                                  kernel_initializer=initializer
+                                 )(conv1d)
 
-#     conv1d = keras.layers.Conv1D(filters=512, kernel_size=4, 
-#                                   padding="same", activation="relu" ,
-#                                   kernel_initializer=initializer
-#                                  )(conv1d) 
+    conv1d = keras.layers.Conv1D(filters=512, kernel_size=4, 
+                                  padding="same", activation="relu" ,
+                                  kernel_initializer=initializer
+                                 )(conv1d) 
 
-#     conv1d = keras.layers.Conv1D(filters=768, kernel_size=2, 
-#                                   padding="same", activation="relu" ,
-#                                   kernel_initializer=initializer
-#                                  )(conv1d) 
+    conv1d = keras.layers.Conv1D(filters=768, kernel_size=2, 
+                                  padding="same", activation="relu" ,
+                                  kernel_initializer=initializer
+                                 )(conv1d) 
 
-# #------------------------------------------------------------------------------
-#     connector = conv1d
-#     # connector = keras.layers.Flatten()(conv1d)
-#     # connector = keras.layers.SpatialDropout1D(0.5)(conv1d)
-#     # connector = keras.layers.BatchNormalization()(connector)
-#     # connector = keras.layers.GlobalAveragePooling1D()(connector)
-#     # connector = keras.layers.Flatten()(connector)
-# #------------------------------------------------------------------------------        
-#     dense1 = keras.layers.Dense(512, 
-#                                activation="linear", 
-#                                kernel_initializer=initializer,
-#                                )(connector)
-#     dense1 = keras.layers.Dense(512, 
-#                                activation="linear", 
-#                                kernel_initializer=initializer,
-#                                )(dense1)
+#------------------------------------------------------------------------------
+    connector = conv1d
+    # connector = keras.layers.Flatten()(conv1d)
+    # connector = keras.layers.SpatialDropout1D(0.5)(conv1d)
+    # connector = keras.layers.BatchNormalization()(connector)
+    # connector = keras.layers.GlobalAveragePooling1D()(connector)
+    # connector = keras.layers.Flatten()(connector)
+#------------------------------------------------------------------------------        
+    dense1 = keras.layers.Dense(512, 
+                               activation="linear", 
+                               kernel_initializer=initializer,
+                               )(connector)
+    dense1 = keras.layers.Dense(512, 
+                               activation="linear", 
+                               kernel_initializer=initializer,
+                               )(dense1)
 
     
-#     dense1 = keras.layers.BatchNormalization()(dense1)
-#     dense1 = keras.layers.Flatten()(dense1)
+    dense1 = keras.layers.BatchNormalization()(dense1)
+    dense1 = keras.layers.Flatten()(dense1)
 
-#     dense1 = keras.layers.Dense(64, 
-#                                activation="linear", 
-#                                kernel_initializer=initializer,
-#                                )(dense1)
-#     dense1 = keras.layers.Dense(64, 
-#                                activation="linear", 
-#                                kernel_initializer=initializer,
-#                                )(dense1)
+    dense1 = keras.layers.Dense(64, 
+                               activation="linear", 
+                               kernel_initializer=initializer,
+                               )(dense1)
+    dense1 = keras.layers.Dense(64, 
+                               activation="linear", 
+                               kernel_initializer=initializer,
+                               )(dense1)
                                     
-# #------------------------------------------------------------------------------
-#     output_layer1 = keras.layers.Dense(3)(dense1)
+#------------------------------------------------------------------------------
+    # output_layer1 = keras.layers.Dense(3)(dense1)
+    # add non-negative constraint
+    output_layer1 = keras.layers.Dense(3, activation='softplus')(dense1)
 
 
-#     return keras.models.Model(inputs=input_layer, outputs=output_layer1)
+    return keras.models.Model(inputs=input_layer, outputs=output_layer1)
 
-# model = make_model(input_shape=x_train.shape[1:])
+model = make_model(input_shape=x_train.shape[1:])
 
-# #Model Summarize
-# print(model.summary())
-# keras.utils.plot_model(model, show_shapes=True)
+#Model Summarize
+print(model.summary())
+keras.utils.plot_model(model, show_shapes=True)
 
 # ##### Training #####
 
-# epochs = 200
-batch_size = 256
+epochs = 500
+batch_size = 1024
 Experiment_path=Experiment_path+"_"+str(batch_size) 
-# print(Experiment_path)
+print(Experiment_path)
 
 
-# log_dir = "logs/fit/" + datetime.datetime.now().strftime("%y_%m_%d") + "/" \
-#                       + Experiment_path.split("model_",1)[1]  \
-#                       +"_"+ filename.split("_",-1)[2] \
-#                       + datetime.datetime.now().strftime("_%m%d%H%M%S")
+log_dir = "logs/fit/" + datetime.datetime.now().strftime("%y_%m_%d") + "/" \
+                      + Experiment_path.split("model_",1)[1]  \
+                      +"_"+ filename.split("_",-1)[2] \
+                      + datetime.datetime.now().strftime("_%m%d%H%M%S")
 
-# tensorboard_callback = tf.keras.callbacks.TensorBoard(
-#                                           log_dir=log_dir,
-#                                           histogram_freq=0,
-#                                           profile_batch=0)
+tensorboard_callback = tf.keras.callbacks.TensorBoard(
+                                          log_dir=log_dir,
+                                          histogram_freq=0,
+                                          profile_batch=0)
 
-# modelpath= Experiment_path \
-#            + "/" + "model_{epoch:02d}_{val_loss:.2f}_{val_accuracy:.2f}.h5"
+modelpath= Experiment_path \
+           + "/" + "model_{epoch:02d}_{val_loss:.2f}_{val_accuracy:.2f}.h5"
 
-# callbacks =[
-#             # keras.callbacks.ModelCheckpoint(
-#             #     modelpath, save_best_only=True, 
-#             #     monitor="val_loss",mode="min"
-#             #     ),
+callbacks =[
+            # keras.callbacks.ModelCheckpoint(
+            #     modelpath, save_best_only=True, 
+            #     monitor="val_loss",mode="min"
+            #     ),
             
-#             keras.callbacks.ReduceLROnPlateau(
-#                 monitor='val_loss', factor=0.5, patience=20, verbose=0,
-#                 mode='min', min_lr=0.000001
-#                 ),
+            keras.callbacks.ReduceLROnPlateau(
+                monitor='val_loss', factor=0.5, patience=20, verbose=0,
+                mode='min', min_lr=0.000001
+                ),
             
-#             keras.callbacks.EarlyStopping(monitor="val_loss", patience=60, 
-#                                            verbose=0),
+            keras.callbacks.EarlyStopping(monitor="val_loss", patience=60, 
+                                           verbose=0),
             
-#             #TqdmCallback(verbose=0),
-#             tensorboard_callback,         
-#            ]
+            #TqdmCallback(verbose=0),
+            tensorboard_callback,         
+           ]
 
-# model.compile(
-#               optimizer="adam",
-#               loss=tf.keras.losses.MeanAbsoluteError(),
-#               # metrics=[tf.keras.metrics.MeanAbsoluteError()]
-#              )
+model.compile(
+              optimizer="adam",
+              loss=tf.keras.losses.MeanAbsoluteError(),
+              # metrics=[tf.keras.metrics.MeanAbsoluteError()]
+             )
 
-# history = model.fit(
-#           x_train,
-#           y_train,
-#           batch_size=batch_size,
-#           epochs=epochs,
-#           callbacks=callbacks,
-#           validation_data=(x_test,y_test),
-#           verbose=2,
-#                    )
+history = model.fit(
+          x_train,
+          y_train,
+          batch_size=batch_size,
+          epochs=epochs,
+          callbacks=callbacks,
+          validation_data=(x_test,y_test),
+          verbose=2,
+                   )
 
-# model.save('RegC1_alpha_BN.h5')
+model.save('RegC1_alpha_BN.h5')
 
 
 ##### Evaluation #####
