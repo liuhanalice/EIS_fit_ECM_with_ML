@@ -64,6 +64,16 @@ def Z_W(sigma,angular_frequency):
     W_impedace =( sigma * np.sqrt(2) ) / np.sqrt(1j*angular_frequency)  
     return W_impedace
 
+def Z_L(inductance, angular_frequency):
+    """
+        Define impedance of inductor (L)
+        
+        :param inductance: L [H]
+        :return resistor_impedance: Impedance of inductor [Ohm]
+    """
+    L_impedance = 1j*angular_frequency*inductance
+    return L_impedance
+
 ###### Define Essential Functions ######
 def log_rand(initial_gen,last_gen,size_number):
     """ 
@@ -91,6 +101,19 @@ def lin_rand(initial_gen,last_gen,size_number):
     lin_array = initial_gen + ( last_gen - initial_gen ) * np.random.rand( size_number )
     return lin_array
 
+def nor_rand(mu, size_number, sigma = None):
+    """ 
+    Generate random numbers from a normal distribution
+
+    :param mu: mean of the normal distribution
+    :param sigma: standard deviation of the normal distribution
+    :param size_number: number of random numbers to generate
+    :return norm_array: array of normally distributed random numbers
+    """
+    if sigma is None:
+        sigma = 0.2*mu
+    norm_array = np.random.normal(loc=mu, scale=sigma, size=size_number)
+    return norm_array
 
 ###### Array Generator Functions ######
 def genZR(size_number,number_of_point,resistance):
@@ -116,6 +139,14 @@ def genZW(size_number,number_of_point,sigma,angular_frequency):
         for idx2 in range(number_of_point): 
             ZW[idx][idx2] = Z_W(sigma[idx],angular_frequency[idx2])
     return ZW
+
+def genZL(size_number,number_of_point,inductance):
+    """Generate array of impedance of resistors"""
+    ZL= np.zeros((size_number,number_of_point), dtype=complex)
+    for idx in range(size_number):
+        for idx2 in range(number_of_point): 
+            ZL[idx][idx2] = Z_L(inductance[idx], angular_frequency[idx2])
+    return ZL
 
 ###### Visulaization Functions ######
 plt.rcParams['axes.formatter.min_exponent'] = 4
@@ -408,11 +439,46 @@ def sim_cir5():
 
     return Zsum,np.array(Zparam)
 
+def sim_cir6(size_number=131072, number_of_point=60):
+    """ Simulate circuit 6: L + R0 + (R1 || C1) + ( (R2 + Z ) || C2)"""
+    angular_frequency = F_range(0.02,20000,number_of_point)[0]
+
+    L = nor_rand(mu=3.4e-13, size_number=size_number)
+    ZL = genZL(size_number, number_of_point, L)
+
+    R0 = nor_rand(mu=0.4, size_number=size_number)
+    ZR0 = genZR(size_number,number_of_point,R0)
+
+    R1 = nor_rand(mu=0.85, size_number=size_number)
+    ZR1 = genZR(size_number,number_of_point,R1)
+
+    R2 = nor_rand(mu=0.5, size_number=size_number)
+    ZR2 = genZR(size_number,number_of_point,R2)
+
+    ideality_factor= np.ones(size_number)
+    C1 = nor_rand(mu=0.04, size_number=size_number)
+    ZC1= genZQ(size_number,number_of_point, C1,ideality_factor,angular_frequency)
+
+    ideality_factor= np.ones(size_number)
+    C2 = nor_rand(mu=0.0015, size_number=size_number)
+    ZC2= genZQ(size_number,number_of_point, C2,ideality_factor,angular_frequency)
+
+    sigma = nor_rand(mu=0.13, size_number=size_number)
+    ZW=genZW(size_number,number_of_point,sigma,angular_frequency)
+
+    Zsum= ZL + ZR0 + 1 / ( 1 / ZR1 + 1 / ZC1 ) + 1 / ( 1 / ZC2 + 1 / ( ZR2 + ZW ) )
+
+    Zparam=[]
+    for idx in range(size_number):
+        Zparam.append([L[idx], R0[idx], R1[idx], R2[idx], C1[idx], C2[idx], sigma[idx]])    
+
+    return Zsum,np.array(Zparam)
+
 
 ###### Initialize Parameters ######
 
 #Number of circuit:
-number_of_circuit=5    
+number_of_circuit=6    
 #Number of spectrum in each circuit : 256 512 1024 2048 4096 8192 16384 32768 (131072)
 size_number=131072
 #Numer of data point in each spectrum:
@@ -436,10 +502,12 @@ Circuit_spec[1],Circuit1_param=sim_cir2()
 Circuit_spec[2],Circuit2_param=sim_cir3()
 Circuit_spec[3],Circuit3_param=sim_cir4()
 Circuit_spec[4],Circuit4_param=sim_cir5()
+Circuit_spec[5],Circuit5_param=sim_cir6()
+
 
 param_dict={"Circuit0_param":Circuit0_param,"Circuit1_param":Circuit1_param,
             "Circuit2_param":Circuit2_param,"Circuit3_param":Circuit3_param,
-            "Circuit4_param":Circuit4_param}
+            "Circuit4_param":Circuit4_param, "Circuit5_param":Circuit5_param}
 
 
 ##### Data Export #####
