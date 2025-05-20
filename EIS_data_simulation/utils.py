@@ -426,7 +426,7 @@ def sim_cir5():
 
     ideality_factor2=np.round(lin_rand(alpha_range[0],alpha_range[1],size_number),3)
     Q2=log_rand(q_range[0],q_range[1],size_number)
-    Zq2= genZQ(size_number,number_of_point,Q2,ideality_factor1,angular_frequency)
+    Zq2= genZQ(size_number,number_of_point,Q2,ideality_factor2,angular_frequency)
 
     sigma=log_rand(sigma_range[0],sigma_range[1],size_number)
     Zw=genZW(size_number,number_of_point,sigma,angular_frequency)
@@ -474,11 +474,46 @@ def sim_cir6(size_number=131072, number_of_point=60):
 
     return Zsum,np.array(Zparam)
 
+def sim_cir7(size_number=131072, number_of_point=60):
+    """ Simulate circuit 7: L + R0 + (R1 || CPE1) + ( (R2 + Z ) || CPE2)"""
+    angular_frequency = F_range(0.02,20000,number_of_point)[0]
+
+    L = nor_rand(mu=3.4e-13, size_number=size_number)
+    ZL = genZL(size_number, number_of_point, L)
+
+    R0 = nor_rand(mu=0.4, size_number=size_number)
+    ZR0 = genZR(size_number,number_of_point,R0)
+
+    R1 = nor_rand(mu=0.85, size_number=size_number)
+    ZR1 = genZR(size_number,number_of_point,R1)
+
+    R2 = nor_rand(mu=0.5, size_number=size_number)
+    ZR2 = genZR(size_number,number_of_point,R2)
+
+    ideality_factor1=np.round(lin_rand(alpha_range[0],alpha_range[1],size_number),3)
+    Q1=log_rand(q_range[0],q_range[1],size_number)
+    ZQ1= genZQ(size_number,number_of_point,Q1,ideality_factor1,angular_frequency)
+
+    ideality_factor2=np.round(lin_rand(alpha_range[0],alpha_range[1],size_number),3)
+    Q2=log_rand(q_range[0],q_range[1],size_number)
+    ZQ2= genZQ(size_number,number_of_point,Q2,ideality_factor2,angular_frequency)
+
+    sigma = nor_rand(mu=0.13, size_number=size_number)
+    ZW=genZW(size_number,number_of_point,sigma,angular_frequency)
+
+    Zsum= ZL + ZR0 + 1 / ( 1 / ZR1 + 1 / ZQ1 ) + 1 / ( 1 / ZQ2 + 1 / ( ZR2 + ZW ) )
+
+    Zparam=[]
+    for idx in range(size_number):
+        Zparam.append([L[idx], R0[idx], R1[idx], R2[idx], Q1[idx], Q2[idx], ideality_factor1[idx], ideality_factor2[idx], sigma[idx]])    
+
+    return Zsum,np.array(Zparam)
+
 
 ###### Initialize Parameters ######
 
 #Number of circuit:
-number_of_circuit=6    
+number_of_circuit=7    
 #Number of spectrum in each circuit : 256 512 1024 2048 4096 8192 16384 32768 (131072)
 size_number=131072
 #Numer of data point in each spectrum:
@@ -503,11 +538,13 @@ Circuit_spec[2],Circuit2_param=sim_cir3()
 Circuit_spec[3],Circuit3_param=sim_cir4()
 Circuit_spec[4],Circuit4_param=sim_cir5()
 Circuit_spec[5],Circuit5_param=sim_cir6()
+Circuit_spec[6],Circuit6_param=sim_cir7()
 
 
 param_dict={"Circuit0_param":Circuit0_param,"Circuit1_param":Circuit1_param,
             "Circuit2_param":Circuit2_param,"Circuit3_param":Circuit3_param,
-            "Circuit4_param":Circuit4_param, "Circuit5_param":Circuit5_param}
+            "Circuit4_param":Circuit4_param, "Circuit5_param":Circuit5_param,
+            "Circuit6_param":Circuit6_param}
 
 
 ##### Data Export #####
